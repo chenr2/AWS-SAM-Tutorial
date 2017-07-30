@@ -66,11 +66,13 @@ Some things to note:
 ./deploy.sh
 ```
 
-Within the AWS console, go to DynamoDB > Tables. You should see a table named `SAM-tutorial-HelloTable-123blah`.
+Visit the URL. (You may need to get it again from API Gateway Dashboard)
 
-Click on the Table, and select the **Items** tab. Then click **Create Item** and add an entry or two.
+You should see the table contents:
 
-![](images/create-table.png)
+```
+{"Count": 2, "Items": [{"name": "Rob"}, {"name": "Bob"}], "ScannedCount": 2}
+```
 
 ## Next step
 
