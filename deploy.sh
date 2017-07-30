@@ -1,6 +1,9 @@
 #!/bin/bash
 
-PROJECT=SAM-tutorial
+# dev:   ./deploy.sh
+# prod:  ./deploy.sh prod
+STAGE=${1:-dev}
+PROJECT=SAM-tutorial-$STAGE
 
 # Change the suffix on the bucket to something unique!
 BUCKET=$PROJECT-90210-rob
@@ -22,5 +25,7 @@ aws cloudformation package                   \
 aws cloudformation deploy                     \
     --template-file build/output.yaml         \
     --stack-name $PROJECT                     \
-    --capabilities CAPABILITY_IAM             
+    --capabilities CAPABILITY_IAM             \
+    --parameter-overrides Environment=$STAGE
+
 
