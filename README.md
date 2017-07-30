@@ -4,25 +4,61 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Create a Table
+## Wire up the table
 
-This commit adds a `SimpleTable`:
+Up until now, you've created a DynamoDB table. But it's just sitting there and not wired up to anything.
+
+The `AWS::Serverless::SimpleTable` generates the Table name dynamically. So you need to pass the Table name into the Lambda Environment variable:
 
 ```
 Resources:
-  ...
-  HelloTable:
-    Type: AWS::Serverless::SimpleTable
+  HelloLambda:
+    Type: AWS::Serverless::Function
     Properties:
-      PrimaryKey:
-        Name: name
-        Type: String
-      ProvisionedThroughput:
-        ReadCapacityUnits: 1
-        WriteCapacityUnits: 1
+      ...
+      Environment:
+        Variables:
+          MyTableName: !Ref HelloTable
 ```
 
-This is just a **DynamoDB** table, with a Primary Key of `name`.
+Now that the Lambda is wired to DynamoDB, you need to give the Lambda access:
+
+```
+Resources:
+  HelloLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      ...
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonDynamoDBFullAccess  
+```
+
+Within `index.py`, you can now access the Table:
+
+```
+import boto3
+import os
+import json
+
+def lambda_handler(event, context):
+    dynamodb = boto3.resource('dynamodb')
+    table = dynamodb.Table(os.environ['MyTableName'])
+    table_results = table.scan()
+
+    response = {
+        "statusCode": 200,
+        "body": json.dumps(table_results)
+    }
+    return response
+```
+
+Some things to note:
+
+* **boto3**: This is the AWS SDK for Python. This is how you access the DynamoDB API.
+* **os**: The Environment variable passed into the Lambda is accessed via `os.environ`.
+* **table.scan**: In DynamoDB, a Scan just gives back everything in a table.
+* **json**: You need a helper package to encode/decode JSON. `json.dumps()` is like `JSON.stringify()`.
 
 ## Build and run
 
