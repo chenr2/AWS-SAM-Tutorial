@@ -4,58 +4,37 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Add a REST endpoint
+## Create a Table
 
-This commit adds an **Event** of type `Api`. 
+This commit adds a `SimpleTable`:
 
 ```
 Resources:
-  HelloLambda:
-    Type: AWS::Serverless::Function
+  ...
+  HelloTable:
+    Type: AWS::Serverless::SimpleTable
     Properties:
-      ...
-      Events:
-        MyEndpoint:
-          Type: Api 
-          Properties:
-            Path: /test
-            Method: get
+      PrimaryKey:
+        Name: name
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
 ```
 
-The Lambda gets triggered by API Gateway. Since there aren't any `AWS::Serverless::Api` resources defined yet, SAM is smart enough to generate one for you.
+This is just a **DynamoDB** table, with a Primary Key of `name`.
 
 ## Build and run
-
-Re-deploy the changes:
 
 ```
 ./deploy.sh
 ```
 
-Within the AWS console, get the URL:
+Within the AWS console, go to DynamoDB > Tables. You should see a table named `SAM-tutorial-HelloTable-123blah`.
 
-API Gateway > SAM-tutorial > Dashboard
+Click on the Table, and select the **Items** tab. Then click **Create Item** and add an entry or two.
 
-At the top, you should see something like this:
-
-```
-https://pm11nr74yk.execute-api.us-east-1.amazonaws.com/Prod/
-```
-
-![](images/get-url.png)
-
-Now, add the path `/test` to the end, like this:
-
-```
-https://pm11nr74yk.execute-api.us-east-1.amazonaws.com/Prod/test
-```
-
-Browse to the url, and you should see the following:
-
-```
-Hello from SAM Tutorial
-```
-
+![](images/create-table.png)
 
 ## Next step
 

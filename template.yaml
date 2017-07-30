@@ -19,3 +19,12 @@ Resources:
           Properties:
             Path: /test
             Method: get
+  HelloTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: name
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
