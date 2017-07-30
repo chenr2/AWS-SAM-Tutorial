@@ -13,3 +13,9 @@ Resources:
       Timeout: 30
       Policies:
         - AWSLambdaBasicExecutionRole
+      Events:
+        MyEndpoint:
+          Type: Api 
+          Properties:
+            Path: /test
+            Method: get
