@@ -11,6 +11,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "predeploy": "npm run build",
+    "deploy": "aws s3 sync build/ s3://sam-tutorial-dev-s3bucket-s64qw5dvivdx"
   }
 }

@@ -4,41 +4,78 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Add CORS
+## Deploy your website to S3
 
-To get around the CORS error, go back to your Lambda code in `index.py`.
+There's no use having your website sitting on your local Mac. You want to deploy it to S3 for others to see.
 
-Add the following line into the `response`:
+This commit adds a bunch of syntax to the template:
 
 ```
-    response = {
-        "statusCode": 200,
-        "headers": { "Access-Control-Allow-Origin": "*" },
-        "body": json.dumps(table_results)
-    }
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+      Bucket: !Ref S3Bucket
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt S3Bucket.WebsiteURL
+    Description: URL for website hosted on S3
 ```
+
+It's a lot of text. But it's basically doing a few things:
+
+* **S3Bucket**: Creates an S3 bucket website
+* **BucketPolicy**: Makes the S3 bucket, and everything in it publicly accessible
+* **Outputs**: Tells you the S3 website URL
 
 ## Build and Run
-
-Redeploy:
 
 ```
 ./deploy.sh
 ```
 
-Refresh the page http://localhost:3000/.
+Under CloudFormation Resources, get the S3 bucket name.
 
-Open the console in Chrome (Command-Option-i), and go to the `Console` tab.
-
-Instead of the error, you should now see the API response.
+Then replace the last two lines of `test-website/package.json`:
 
 ```
-data: {"Count":0,"Items":[],"ScannedCount":0,"ResponseMetadata":{"RetryAttempts":0,"HTTPStatusCode":200,"RequestId":"NU2GVTVFFUMPGBK4HKVTNJ4MKRVV4KQNSO5AEMVJF66Q9ASUAAJG","HTTPHeaders":{"x-amzn-requestid":"NU2GVTVFFUMPGBK4HKVTNJ4MKRVV4KQNSO5AEMVJF66Q9ASUAAJG","content-length":"39","server":"Server","connection":"keep-alive","x-amz-crc32":"3413411624","date":"Mon, 31 Jul 2017 01:17:13 GMT","content-type":"application/x-amz-json-1.0"}}}
+  "scripts": {
+    ...
+    "predeploy": "npm run build",
+    "deploy": "aws s3 sync build/ s3://sam-tutorial-dev-s3bucket-s64qw5dvivdx"
+  }
 ```
 
-**Note**: CORS is a little more complicated than adding a header in the Lambda response. API Gateway has gives you an `Enable CORS` option in the `Actions` menu, which you might have to do for a proper CORS setup. 
+To deploy your ReactJS website to S3:
 
-See https://github.com/awslabs/serverless-application-model/issues/23. 
+```
+npm run deploy
+```
+
+Now go to the `Outputs` tab of the CloudFormation stack, and click on the URL:
+
+```
+http://sam-tutorial-dev-s3bucket-s64qw5dvivdx.s3-website-us-east-1.amazonaws.com
+```
+
+Open the console, and verify that data is logged to the console.
 
 ## Next step
 
