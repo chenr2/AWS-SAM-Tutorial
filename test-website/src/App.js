@@ -2,7 +2,18 @@ import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
+const endpoint = 'https://y64wwpgva0.execute-api.us-east-1.amazonaws.com/dev/test'
+
 class App extends Component {
+
+  componentDidMount() {
+    fetch(endpoint)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log("data: " + JSON.stringify(responseJson));
+      });
+  }
+
   render() {
     return (
       <div className="App">
