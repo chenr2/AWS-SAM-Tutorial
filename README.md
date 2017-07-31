@@ -4,44 +4,41 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Point the website to your API
+## Add CORS
 
-To test your API, point your ReactJS website to the API Gateway endpoint:
+To get around the CORS error, go back to your Lambda code in `index.py`.
+
+Add the following line into the `response`:
 
 ```
-const endpoint = 'https://y64wwpgva0.execute-api.us-east-1.amazonaws.com/dev/test'
-
-class App extends Component {
-
-  componentDidMount() {
-    fetch(endpoint)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        console.log("data: " + JSON.stringify(responseJson));
-      });
-  }
-
-  render() {
-    ...
-``` 
-
-There are a few things going on:
-
-* **endpoint**: Replace this with your API Gateway endpoint.
-* **componentDidMount**: This gets called when your page loads.
-* **fetch**: This is a network call built into ReactJS.
+    response = {
+        "statusCode": 200,
+        "headers": { "Access-Control-Allow-Origin": "*" },
+        "body": json.dumps(table_results)
+    }
+```
 
 ## Build and Run
+
+Redeploy:
+
+```
+./deploy.sh
+```
 
 Refresh the page http://localhost:3000/.
 
 Open the console in Chrome (Command-Option-i), and go to the `Console` tab.
 
-You should see the following in red:
+Instead of the error, you should now see the API response.
 
 ```
-Fetch API cannot load https://y64wwpgva0.execute-api.us-east-1.amazonaws.com/dev/test. No 'Access-Control-Allow-Origin' header is present on the requested resource. Origin 'http://localhost:3000' is therefore not allowed access. If an opaque response serves your needs, set the request's mode to 'no-cors' to fetch the resource with CORS disabled.
+data: {"Count":0,"Items":[],"ScannedCount":0,"ResponseMetadata":{"RetryAttempts":0,"HTTPStatusCode":200,"RequestId":"NU2GVTVFFUMPGBK4HKVTNJ4MKRVV4KQNSO5AEMVJF66Q9ASUAAJG","HTTPHeaders":{"x-amzn-requestid":"NU2GVTVFFUMPGBK4HKVTNJ4MKRVV4KQNSO5AEMVJF66Q9ASUAAJG","content-length":"39","server":"Server","connection":"keep-alive","x-amz-crc32":"3413411624","date":"Mon, 31 Jul 2017 01:17:13 GMT","content-type":"application/x-amz-json-1.0"}}}
 ```
+
+**Note**: CORS is a little more complicated than adding a header in the Lambda response. API Gateway has gives you an `Enable CORS` option in the `Actions` menu, which you might have to do for a proper CORS setup. 
+
+See https://github.com/awslabs/serverless-application-model/issues/23. 
 
 ## Next step
 
