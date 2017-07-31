@@ -4,61 +4,46 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Change the API Gateway Stage
+## Add Binary Media Types
 
-So far, the URL has been in the format:
+API Gateway supports uploading binary content such as gzip or images.
+
+You can set this manually in the AWS console:
+
+API Gateway > SAM-tutorial-dev > Binary Support
+
+And then add the appropriate MIME type, such as `application/octet-stream`:
+
+![](images/binary-support.png)
+
+In order for your changes to stick, you need to re-deploy the API:
+
+![](images/deploy-api.png)
+
+When possible, it's best to minimize manual steps.
+
+Now that you're using `AWS::Serverless::Api`, you can actually set this information in Swagger:
 
 ```
-https://yj3ynzjkh8.execute-api.us-east-1.amazonaws.com/Prod/test
-```
-
-The URL still says `Prod`, even when you deploy to `dev`. 
-
-To fix this, you need to use `AWS::Serverless::Api`, rather than relying on AWS SAM to do everything based on the Lambda event.
-
-```
+Resources:
   HelloAPI:
     Type: AWS::Serverless::Api
     Properties:
       StageName: !Sub ${Environment}
-```
-
-First, you pass in the `Environment` parameter into the `StageName`. This creates a Stage named `dev` in API Gateway.
-
-The `AWS::Serverless::Api` resource expects a Swagger document. Swagger is a specification for defining APIs.
-
-You attach the Swagger document inline under `DefinitionBody`:
-
-```
       DefinitionBody:
         swagger: 2.0
-        info:
-          title:
-            Ref: AWS::StackName
-        paths:
-          /test:
-            get:
-              x-amazon-apigateway-integration:
-                httpMethod: POST
-                type: aws_proxy
-                uri:
-                  !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloLambda.Arn}/invocations
-              responses: {}
+        ...
+        x-amazon-apigateway-binary-media-types:
+          - '*/*'
 ```
-
-The Swagger syntax can be pretty intimidating. Fortunately, you can just export it from a API Gateway:
-
-API Gateway > SAM-tutorial-dev > Stages > dev > Export > Export as Swagger + API Gateway
-
-![](images/swagger.png)
 
 ## Build and run
 
-Now try hitting the URL. But this time, use `dev` instead of `Prod`.
+```
+./deploy.sh
+```
 
-```
-https://y64wwpgva0.execute-api.us-east-1.amazonaws.com/dev/test
-```
+Go to API Gateway > SAM-tutorial-dev > Binary Support, and verify that your Binary Media Type is set.
 
 ## Next step
 
