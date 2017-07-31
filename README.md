@@ -4,46 +4,30 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Add Binary Media Types
+## Create a ReactJS website
 
-API Gateway supports uploading binary content such as gzip or images.
+Hey, let's create a website! You'll need it to test your Serverless app.
 
-You can set this manually in the AWS console:
-
-API Gateway > SAM-tutorial-dev > Binary Support
-
-And then add the appropriate MIME type, such as `application/octet-stream`:
-
-![](images/binary-support.png)
-
-In order for your changes to stick, you need to re-deploy the API:
-
-![](images/deploy-api.png)
-
-When possible, it's best to minimize manual steps.
-
-Now that you're using `AWS::Serverless::Api`, you can actually set this information in Swagger:
+Install this React template:
 
 ```
-Resources:
-  HelloAPI:
-    Type: AWS::Serverless::Api
-    Properties:
-      StageName: !Sub ${Environment}
-      DefinitionBody:
-        swagger: 2.0
-        ...
-        x-amazon-apigateway-binary-media-types:
-          - '*/*'
+npm install -g create-react-app
 ```
 
-## Build and run
+Create the website:
 
 ```
-./deploy.sh
+create-react-app test-website
 ```
 
-Go to API Gateway > SAM-tutorial-dev > Binary Support, and verify that your Binary Media Type is set.
+Start the website:
+
+```
+cd test-website
+yarn start
+```
+
+Your browser should open the following URL: http://localhost:3000/ 
 
 ## Next step
 
