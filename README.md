@@ -4,69 +4,61 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Add a Stage
+## Change the API Gateway Stage
 
-The Serverless Framework made it easy to deploy to different Stages/Environments like Dev, QA, and Prod. 
-
-With AWS SAM, you'll have to rely on conventional methods for Stage deployment.
-
-In this commit, you add a CloudFormation Parameter called `Environment`:
+So far, the URL has been in the format:
 
 ```
-Parameters:
-  Environment:
-    Type: String
+https://yj3ynzjkh8.execute-api.us-east-1.amazonaws.com/Prod/test
 ```
 
-Then you can dereference `Environment` by using the Substitute function:
+The URL still says `Prod`, even when you deploy to `dev`. 
+
+To fix this, you need to use `AWS::Serverless::Api`, rather than relying on AWS SAM to do everything based on the Lambda event.
 
 ```
-      FunctionName: !Sub HelloLambda-${Environment}
+  HelloAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Environment}
 ```
 
-You pass the `Environment` paremeter into CloudFormation via the `deploy` command:
+First, you pass in the `Environment` parameter into the `StageName`. This creates a Stage named `dev` in API Gateway.
+
+The `AWS::Serverless::Api` resource expects a Swagger document. Swagger is a specification for defining APIs.
+
+You attach the Swagger document inline under `DefinitionBody`:
 
 ```
-aws cloudformation deploy                     \
-    --template-file build/output.yaml         \
-    --stack-name $PROJECT                     \
-    --capabilities CAPABILITY_IAM             \
-    --parameter-overrides Environment=$STAGE
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /test:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloLambda.Arn}/invocations
+              responses: {}
 ```
 
-The `$STAGE` variable is defined at the top of `deploy.sh`:
+The Swagger syntax can be pretty intimidating. Fortunately, you can just export it from a API Gateway:
 
-```
-STAGE=${1:-dev}
-```
+API Gateway > SAM-tutorial-dev > Stages > dev > Export > Export as Swagger + API Gateway
 
-This basically says that `STAGE` is set to the first argument. e.g. `./deploy.sh qa`
-
-If no argument is given, e.g. `./deploy.sh`, it defaults to `dev`.
-
-Also, the `PROJECT` and `BUCKET` include the Stage suffix so that stack and bucket names are unique.
-
-```
-PROJECT=SAM-tutorial-$STAGE
-```
+![](images/swagger.png)
 
 ## Build and run
 
-Delete the `SAM-tutorial` CloudFormation stack.
-
-Then deploy a new **Dev** stack:
+Now try hitting the URL. But this time, use `dev` instead of `Prod`.
 
 ```
-./deploy.sh
+https://y64wwpgva0.execute-api.us-east-1.amazonaws.com/dev/test
 ```
-
-Go to API Gateway > Dashboard and get the URL.
-
-Visit the URL, and the table results should be empty.
-
-Also, go to CloudFormation > SAM-tutorial-dev > Resources tab, and note that each resource has the `-dev` suffix.
-
-![](images/cloudformation-resources.png)
 
 ## Next step
 

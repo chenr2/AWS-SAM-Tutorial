@@ -5,6 +5,24 @@ Parameters:
   Environment:
     Type: String
 Resources:
+  HelloAPI:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Sub ${Environment}
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title:
+            Ref: AWS::StackName
+        paths:
+          /test:
+            get:
+              x-amazon-apigateway-integration:
+                httpMethod: POST
+                type: aws_proxy
+                uri:
+                  !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${HelloLambda.Arn}/invocations
+              responses: {}
   HelloLambda:
     Type: AWS::Serverless::Function
     Properties:
@@ -23,6 +41,8 @@ Resources:
           Properties:
             Path: /test
             Method: get
+            RestApiId:
+              Ref: HelloAPI
       Environment:
         Variables:
           MyTableName: !Ref HelloTable
