@@ -4,64 +4,63 @@ This tutorial uses AWS SAM to create a hello-world Serverless app with API Gatew
 
 Start with the first commit. Then `Checkout` the next commit when you're ready to move onto the next step.
 
-## Deploy your website to S3
+## Render the table data in the website
 
-There's no use having your website sitting on your local Mac. You want to deploy it to S3 for others to see.
-
-This commit adds a bunch of syntax to the template:
+This commit renders the list of names returned from DynamoDB.
 
 ```
-  S3Bucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: PublicRead
-      WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: error.html
-  BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      PolicyDocument:
-        Statement:
-          - Sid: PublicReadForGetBucketObjects
-            Effect: Allow
-            Principal: '*'
-            Action: s3:GetObject
-            Resource: !Join
-              - ''
-              - - 'arn:aws:s3:::'
-                - !Ref S3Bucket
-                - /*
-      Bucket: !Ref S3Bucket
-Outputs:
-  WebsiteURL:
-    Value: !GetAtt S3Bucket.WebsiteURL
-    Description: URL for website hosted on S3
+class App extends Component {
+  // 1
+  constructor() {
+      super();
+      this.state = {items: []};
+  }
+
+  componentDidMount() {
+    fetch(endpoint)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        console.log("data: " + JSON.stringify(responseJson));
+        // 2
+        this.setState({items: responseJson.Items}); 
+      });
+  }
+
+  render() {
+    // 3
+    const rows = this.state.items.map((item, index) => <tr><td>{item.name}</td></tr>);
+    return (
+      <div className="App">
+        <div className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <h2>Welcome to React</h2>
+        </div>
+        <table>
+            <tbody>
+              // 4
+              {rows}
+            </tbody>
+        </table>
+      </div>
+    );
+  }
+}
 ```
 
-It's a lot of text. But it's basically doing a few things:
+Here are the changes:
 
-* **S3Bucket**: Creates an S3 bucket website
-* **BucketPolicy**: Makes the S3 bucket, and everything in it publicly accessible
-* **Outputs**: Tells you the S3 website URL
+1. The `state` is initially set to an object with an `items` property (which starts off with an empty array.)
+1. When the data comes back from the API call, the `Items` payload is extracted.
+1. Each name from the list is wrapped with a table row.
+1. The table rows of names goes into the table body.
+
+The lifecycle kind of goes like this:
+
+1. `constructor()` gets called at the beginning.
+1. `componentDidMount()` is called next. This kicks off the API call.
+1. `render()` gets called when the page is initially loaded (which at this point has an empty array of names). It gets called again in the API callback, via `setState()` -- but this time, it has real data. 
 
 ## Build and Run
-
-```
-./deploy.sh
-```
-
-Under CloudFormation Resources, get the S3 bucket name.
-
-Then replace the last two lines of `test-website/package.json`:
-
-```
-  "scripts": {
-    ...
-    "predeploy": "npm run build",
-    "deploy": "aws s3 sync build/ s3://sam-tutorial-dev-s3bucket-s64qw5dvivdx"
-  }
-```
 
 To deploy your ReactJS website to S3:
 
@@ -76,6 +75,8 @@ http://sam-tutorial-dev-s3bucket-s64qw5dvivdx.s3-website-us-east-1.amazonaws.com
 ```
 
 Open the console, and verify that data is logged to the console.
+
+If there is no table data, go into DynamoDB and create a few names, and reload the page.
 
 ## Next step
 
